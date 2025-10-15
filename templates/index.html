@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analyzer AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        .analyzer-card {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+        .analyze-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .clear-btn {
+            background: #f5f5f5;
+            color: #666;
+        }
+        .result-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: none;
+        }
+        .result-card.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .sentiment-result {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .sentiment-emoji {
+            font-size: 5em;
+            margin-bottom: 10px;
+        }
+        .sentiment-label {
+            font-size: 2em;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .sentiment-label.positive {
+            color: #4CAF50;
+        }
+        .sentiment-label.negative {
+            color: #f44336;
+        }
+        .sentiment-label.neutral {
+            color: #FF9800;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .metric {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .metric-label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+        }
+        .analyzed-text {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .analyzed-text h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .analyzed-text p {
+            color: #666;
+            line-height: 1.6;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 Sentiment Analyzer</h1>
+            <p>Analyze the emotional tone of any text using AI</p>
+        </div>
+
+        <div class="analyzer-card">
+            <textarea id="textInput" placeholder="Enter your text here to analyze its sentiment...\n\nExample: I love this product! It's amazing and works perfectly."></textarea>
+            <div class="button-group">
+                <button class="analyze-btn" onclick="analyzeText()">Analyze Sentiment</button>
+                <button class="clear-btn" onclick="clearAll()">Clear</button>
+            </div>
+            <div id="error" class="error" style="display: none;"></div>
+        </div>
+
+        <div id="resultCard" class="result-card">
+            <div class="sentiment-result">
+                <div id="emoji" class="sentiment-emoji"></div>
+                <div id="sentimentLabel" class="sentiment-label"></div>
+            </div>
+
+            <div class="metrics">
+                <div class="metric">
+                    <div class="metric-label">Polarity</div>
+                    <div id="polarity" class="metric-value"></div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Subjectivity</div>
+                    <div id="subjectivity" class="metric-value"></div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Confidence</div>
+                    <div id="confidence" class="metric-value"></div>
+                </div>
+            </div>
+
+            <div class="analyzed-text">
+                <h3>Analyzed Text:</h3>
+                <p id="analyzedText"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function analyzeText() {
+            const text = document.getElementById('textInput').value.trim();
+            const errorDiv = document.getElementById('error');
+            const resultCard = document.getElementById('resultCard');
+
+            errorDiv.style.display = 'none';
+            resultCard.classList.remove('show');
+
+            if (!text) {
+                errorDiv.textContent = 'Please enter some text to analyze.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Analysis failed');
+                }
+
+                displayResults(data);
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        function displayResults(data) {
+            document.getElementById('emoji').textContent = data.emoji;
+            
+            const sentimentLabel = document.getElementById('sentimentLabel');
+            sentimentLabel.textContent = data.sentiment;
+            sentimentLabel.className = 'sentiment-label ' + data.sentiment.toLowerCase();
+
+            document.getElementById('polarity').textContent = data.polarity;
+            document.getElementById('subjectivity').textContent = data.subjectivity;
+            document.getElementById('confidence').textContent = data.confidence + '%';
+            document.getElementById('analyzedText').textContent = data.text;
+
+            document.getElementById('resultCard').classList.add('show');
+        }
+
+        function clearAll() {
+            document.getElementById('textInput').value = '';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('resultCard').classList.remove('show');
+        }
+
+        // Allow Enter to analyze
+        document.getElementById('textInput').addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                analyzeText();
+            }
+        });
+    </script>
+</body>
+</html>
